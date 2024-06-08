@@ -1,52 +1,133 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사이트 설계</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            position: relative;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            width: 100vw;
-        }
-        .element {
-            position: absolute;
-            font-size: 20px; /* Adjust as needed */
-        }
-        .top-left {
-            top: 20px;
-            left: 20px;
-        }
-        .center {
-            top: 40%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        .middle-left {
-            top: 55%;
-            left: 30%;
-            transform: translate(-50%, -50%);
-        }
-        .middle-left-lower {
-            top: 70%;
-            left: 30%;
-            transform: translate(-50%, -50%);
-        }
-        .bottom-right {
-            bottom: 20px;
-            right: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>탁구 게임</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+    canvas {
+      border: 1px solid #000;
+    }
+  </style>
 </head>
 <body>
-    <div class="element top-left">ㅇㅎㄴ</div>
-    <div class="element center">구글</div>
-    <div class="element middle-left">유튜브</div>
-    <div class="element middle-left-lower">유튜브</div>
-    <div class="element bottom-right">1쇼츠</div>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <div id="score" style="position: absolute; top: 20px; left: 20px; font-size: 24px;"></div>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    const paddleWidth = 10;
+    const paddleHeight = 80;
+    const ballRadius = 10;
+    const paddleSpeed = 5;
+
+    let player1Y = height / 2 - paddleHeight / 2;
+    let player2Y = height / 2 - paddleHeight / 2;
+    let ballX = width / 2;
+    let ballY = height / 2;
+    let ballSpeedX = 5;
+    let ballSpeedY = 5;
+    let player1Score = 0;
+    let player2Score = 0;
+
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+      
+      // Draw paddles
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0, player1Y, paddleWidth, paddleHeight);
+      ctx.fillRect(width - paddleWidth, player2Y, paddleWidth, paddleHeight);
+      
+      // Draw ball
+      ctx.beginPath();
+      ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+      ctx.fillStyle = 'red';
+      ctx.fill();
+      ctx.closePath();
+
+      // Draw scores
+      ctx.fillStyle = 'black';
+      ctx.font = '24px Arial';
+      ctx.fillText(`Player 1: ${player1Score}`, 20, 40);
+      ctx.fillText(`Player 2: ${player2Score}`, width - 160, 40);
+    }
+
+    function update() {
+      // Move paddles
+      if (player1Y >= 0 && player1Y <= height - paddleHeight) {
+        if (keysDown['w']) {
+          player1Y -= paddleSpeed;
+        } else if (keysDown['s']) {
+          player1Y += paddleSpeed;
+        }
+      }
+      if (player2Y >= 0 && player2Y <= height - paddleHeight) {
+        if (keysDown['ArrowUp']) {
+          player2Y -= paddleSpeed;
+        } else if (keysDown['ArrowDown']) {
+          player2Y += paddleSpeed;
+        }
+      }
+
+      // Move ball
+      ballX += ballSpeedX;
+      ballY += ballSpeedY;
+
+      // Ball collision with walls
+      if (ballY + ballRadius >= height || ballY - ballRadius <= 0) {
+        ballSpeedY = -ballSpeedY;
+      }
+
+      // Ball collision with paddles
+      if (ballX - ballRadius <= paddleWidth && ballY >= player1Y && ballY <= player1Y + paddleHeight) {
+        ballSpeedX = -ballSpeedX;
+      } else if (ballX + ballRadius >= width - paddleWidth && ballY >= player2Y && ballY <= player2Y + paddleHeight) {
+        ballSpeedX = -ballSpeedX;
+      }
+
+      // Ball out of bounds
+      if (ballX - ballRadius <= 0) {
+        player2Score++;
+        resetBall();
+      } else if (ballX + ballRadius >= width) {
+        player1Score++;
+        resetBall();
+      }
+    }
+
+    function resetBall() {
+      ballX = width / 2;
+      ballY = height / 2;
+      ballSpeedX = -ballSpeedX;
+      ballSpeedY = Math.random() > 0.5 ? -5 : 5;
+    }
+
+    const keysDown = {};
+    document.addEventListener('keydown', (event) => {
+      keysDown[event.key] = true;
+    });
+    document.addEventListener('keyup', (event) => {
+      delete keysDown[event.key];
+    });
+
+    function gameLoop() {
+      draw();
+      update();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
 </body>
 </html>
